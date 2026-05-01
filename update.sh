@@ -2,7 +2,7 @@
 
 server=warp.igo
 if [ "$1" == "" ]; then
-  daemons="nftables warp-svc warp-mtu"
+  daemons="nftables warp-svc warp-mtu frr"
 else
   daemons=$@
 fi
@@ -10,6 +10,7 @@ fi
 rsync -rtv \
   --exclude='.git/' \
   --include='*/' \
+  --include='frr/***' \
   --include='sysctl.d/***' \
   --include='sysconfig/nftables.conf' \
   --include='systemd/network/***' \
@@ -17,4 +18,4 @@ rsync -rtv \
   --exclude='*' \
   . "$server:/etc/"
 
-ssh -t $server "systemctl daemon-reload; systemctl restart $daemons; sleep 0.5; echo $daemons: \$(systemctl is-active $daemons); nft list table nat; warp-cli tunnel stats"
+ssh -t $server "systemctl daemon-reload; systemctl restart $daemons; sleep 0.5; nft list table nat; warp-cli tunnel stats; echo $daemons: \$(systemctl is-active $daemons)"
