@@ -9,10 +9,22 @@ Type=oneshot
 ;ExecStart=/usr/sbin/tc qdisc replace dev eth0 root fq_codel
 
 ; add SNAT rules
-ExecStart=/bin/bash -c 'for i in $(seq 1 60); do nft list table inet cloudflare-warp >/dev/null 2>&1 && break; sleep 1; done; nft -f /etc/sysconfig/nftables.conf'
+ExecStart=/bin/sh -c '\
+  for i in $(seq 1 60); do \
+    nft list table inet cloudflare-warp >/dev/null 2>&1 && break; \
+    sleep 1; \
+  done; \
+  nft -f /etc/sysconfig/nftables.conf \
+'
 
 ; increase tunnel MTU
-ExecStart=/bin/bash -c 'for i in $(seq 1 60); do ip link show CloudflareWARP && break; sleep 1; done; ip link set CloudflareWARP mtu 1340'
+ExecStart=/bin/sh -c '\
+  ip monitor link | while read -r line; do \
+    CUR=$(cat /sys/class/net/CloudflareWARP/mtu 2>/dev/null) || continue; \
+    [ "$CUR" = "1280" ] || continue; \
+    ip link set CloudflareWARP mtu 1340; \
+  done \
+'
 
 [Install]
 WantedBy=multi-user.target
