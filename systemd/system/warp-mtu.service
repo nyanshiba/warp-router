@@ -17,12 +17,15 @@ ExecStart=/bin/sh -c '\
   nft -f /etc/sysconfig/nftables.conf \
 '
 
-; increase tunnel MTU
+; increase tunnel MTU and add Workers VPC route for Exclude mode
+; https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/deployment/mdm-deployment/path-mtu-discovery/#recommended-mtu
 ExecStart=/bin/sh -c '\
   ip monitor link | while read -r line; do \
+    ip link show CloudflareWARP >/dev/null 2>&1 || continue; \
+    ip route replace 100.64.0.0/12 dev CloudflareWARP; \
     CUR=$(cat /sys/class/net/CloudflareWARP/mtu 2>/dev/null) || continue; \
-    [ "$CUR" = "1280" ] || continue; \
-    ip link set CloudflareWARP mtu 1340; \
+    [ "$CUR" = "1300" ] || continue; \
+    ip link set CloudflareWARP mtu 1304; \
   done \
 '
 
