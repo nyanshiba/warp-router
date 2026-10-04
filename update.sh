@@ -2,7 +2,7 @@
 
 server=warp.igo
 if [ "$1" == "" ]; then
-  daemons="nftables warp-svc warp-mtu frr"
+  daemons="nftables warp-svc warp-mtu frr radvd"
 else
   daemons=$@
 fi
@@ -10,6 +10,7 @@ fi
 rsync -rtv \
   --exclude='.git/' \
   --include='*/' \
+  --include='radvd.conf' \
   --include='frr/***' \
   --include='sysctl.d/***' \
   --include='sysconfig/nftables.conf' \

@@ -8,13 +8,14 @@ Type=oneshot
 ; rip dtaht
 ;ExecStart=/usr/sbin/tc qdisc replace dev eth0 root fq_codel
 
-; add SNAT rules
+; add SNAT rules and keep IPv6 forwarding
 ExecStart=/bin/sh -c '\
   for i in $(seq 1 60); do \
     nft list table inet cloudflare-warp >/dev/null 2>&1 && break; \
     sleep 1; \
   done; \
-  nft -f /etc/sysconfig/nftables.conf \
+  nft -f /etc/sysconfig/nftables.conf; \
+  sysctl -w net.ipv6.conf.all.forwarding=1; \
 '
 
 ; increase tunnel MTU and add Workers VPC route for Exclude mode
@@ -26,6 +27,7 @@ ExecStart=/bin/sh -c '\
     CUR=$(cat /sys/class/net/CloudflareWARP/mtu 2>/dev/null) || continue; \
     [ "$CUR" = "1300" ] || continue; \
     ip link set CloudflareWARP mtu 1304; \
+    sysctl -w net.ipv6.conf.all.forwarding=1; \
   done \
 '
 
