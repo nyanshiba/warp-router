@@ -34,7 +34,7 @@ systemctl enable --now warp-mtu
   - `daemons` : Enable OSPFv2
   - `frr.conf` : Automatically advertise routes for AS13335.
 - **sysconfig/**
-  - `nftables.conf` : Add Discord ICE support using SNAT.
+  - `nftables.conf` : Add non-HTTP protocol (e.g. Discord ICE) support using SNAT.  
 - **sysctl.d/**
   - `forwarder.conf` : Enable IP forwarding
 - **systemd/**
