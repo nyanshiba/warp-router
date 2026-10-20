@@ -19,4 +19,4 @@ rsync -rtv \
   --exclude='*' \
   . "$server:/etc/"
 
-ssh -t $server "systemctl daemon-reload; systemctl restart $daemons; sleep 0.5; nft list table nat; warp-cli tunnel stats; echo $daemons: \$(systemctl is-active $daemons)"
+ssh -t $server "systemctl daemon-reload; systemctl restart $daemons; sleep 0.5; nft list table inet nat; warp-cli tunnel stats; echo $daemons: \$(systemctl is-active $daemons)"
