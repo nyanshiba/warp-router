@@ -22,12 +22,13 @@ ExecStart=/bin/sh -c '\
 ; https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/cloudflare-one-client/deployment/mdm-deployment/path-mtu-discovery/#recommended-mtu
 ExecStart=/bin/sh -c '\
   ip monitor link | while read -r line; do \
-    ip link show CloudflareWARP >/dev/null 2>&1 || continue; \
+    ip link show dev CloudflareWARP up >/dev/null 2>&1 || continue; \
     ip route replace 100.64.0.0/12 dev CloudflareWARP; \
+    sysctl -qw net.ipv6.conf.all.forwarding=1; \
+    curl -s https://cloudflare.com/cdn-cgi/trace | grep ip; \
     CUR=$(cat /sys/class/net/CloudflareWARP/mtu 2>/dev/null) || continue; \
     [ "$CUR" = "1300" ] || continue; \
     ip link set CloudflareWARP mtu 1304; \
-    sysctl -w net.ipv6.conf.all.forwarding=1; \
   done \
 '
 
