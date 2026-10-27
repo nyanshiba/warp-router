@@ -29,7 +29,13 @@ dnf install frr
 dnf install radvd
 
 # to use ./update.sh
-dnf install openssh-server rsync 
+dnf install openssh-server rsync
+
+# use mitmproxy --emudhra in tun mode
+curl -OL https://downloads.mitmproxy.org/12.3.0/mitmproxy-12.3.0-linux-x86_64.tar.gz
+tar xvf mitmproxy-12.3.0-linux-x86_64.tar.gz
+mv mitmweb /usr/local/bin/
+useradd mitmproxy
 ```
 - Enable the `warp-mtu` service to run on boot.
 ```sh
@@ -42,7 +48,7 @@ systemctl enable --now warp-mtu
 - `endpoint.sh` : Change to a specific WARP Connector endpoint for better performance
 - **frr/**
   - `daemons` : Enable OSPFv2
-  - `frr.conf` : Automatically advertise IPv4 routes for AS13335. It also excludes `100.64.0.0/12` to use [Workers VPC](https://developers.cloudflare.com/workers-vpc/configuration/vpc-networks/#runtime-usage).  
+  - `frr.conf` : Automatically advertise IPv4 routes for AS13335. It also advertise `100.64.0.0/12` to use [Workers VPC](https://developers.cloudflare.com/workers-vpc/configuration/vpc-networks/#runtime-usage).  
     > In Exclude mode, the CGNAT range (100.64.0.0/10) is excluded from Cloudflare by default. Remove the CGNAT range from your exclude list so that Mesh IP traffic routes through Cloudflare.  
     [Connect client devices to Cloudflare Mesh · Cloudflare One docs](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-mesh/client-devices/#split-tunnel-configuration)
 - **sysconfig/**
@@ -68,7 +74,8 @@ systemctl enable --now warp-mtu
   - **network/**
   - **eth0.network.d/**
       - `stable.conf` : Enable IPv6 privacy extensions to prevent tunnel address leaks.
-  - **system/**  
+  - **system/**
+    - `mitmweb.service`: Return "204 No Content" to clients that trust the eMudhra intermediate CA.
     - `warp-mtu.service` : Optimize qdisc, increase MTU to 1340 (WireGuard) or 1304 (MASQUE) bytes, insert `nftables.conf`, and enabling IPv6 forwarding.
 - `radvd.conf` : RA RIO routing configuration for IPv6 bridge environments (e.g., FLET'S Hikari RA mode. see [nyanshiba/nat64-on-link](https://github.com/nyanshiba/nat64-on-link)).
 - `update.sh` : Update configuration files via rsync over SSH

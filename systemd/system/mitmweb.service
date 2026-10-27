@@ -1,0 +1,41 @@
+[Unit]
+Description=mitmproxy in TUN mode
+Documentation=https://docs.mitmproxy.org/stable/concepts/modes/#tun-interface
+Wants=network-online.target
+After=network-online.target warp-svc.service frr.service
+
+[Service]
+Type=simple
+User=mitmproxy
+Group=mitmproxy
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW
+
+; settings
+Environment=MITM_TUN=mitm-tun
+Environment=MITM_WEB_HOST=10.0.13.35
+Environment=MITM_WEB_PORT=8080
+Environment=MITM_WEB_PASSWORD=securitytheater
+
+; unprivileged user creates tun before mitmweb starts
+ExecStartPre=-/usr/sbin/ip link del ${MITM_TUN}
+ExecStartPre=/usr/sbin/ip tuntap add dev ${MITM_TUN} mode tun
+ExecStartPre=/usr/sbin/ip link set ${MITM_TUN} up
+
+; higher priority than warp-svc
+ExecStartPre=/bin/sh -c 'ip -4 rule show fwmark 0x100cf | grep -q . || timeout 30 ip monitor rule | grep -m1 "fwmark 0x100cf"'
+; Traffic originating from the LAN (not iif lo) refers to table 100 (see frr.conf).
+ExecStartPre=-/usr/sbin/ip rule del priority 16384
+ExecStartPre=/usr/sbin/ip rule add not iif lo lookup 100 priority 16384
+
+; start mitmweb in tun mode
+ExecStart=/usr/local/bin/mitmweb -vv --emudhra --set block_list='/.*/204' --mode tun:${MITM_TUN} --web-host ${MITM_WEB_HOST} --web-port ${MITM_WEB_PORT} --set web_password=${MITM_WEB_PASSWORD}
+
+ExecStopPost=-/usr/sbin/ip rule del priority 16384
+ExecStopPost=-/usr/sbin/ip link del ${MITM_TUN}
+
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
